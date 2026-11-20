@@ -1,388 +1,246 @@
 <!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<title>Plans Maison R+1 — Mme Wone</title>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Maison R+1 d'angle · Mme Wone · Plans 2D et 3D</title>
 <style>
-  @page { size: A3 landscape; margin: 10mm; }
-  body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #fff; }
-  .page {
-    width: 400mm; height: 287mm;
-    page-break-after: always;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    box-sizing: border-box;
-    padding: 10mm;
-  }
-  .page:last-child { page-break-after: auto; }
-  h2 { font-size: 16pt; margin: 0 0 4mm 0; text-align: center; }
-  .sub { font-size: 9pt; color: #555; margin-bottom: 3mm; text-align: center; }
-  svg { max-width: 100%; max-height: 240mm; }
-  .cartouche {
-    font-size: 8pt; color: #333; border: 0.3mm solid #333;
-    padding: 2mm 3mm; margin-top: 3mm; width: 100%; box-sizing: border-box;
-  }
-  @media print {
-    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .no-print { display: none; }
-  }
-  .no-print {
-    background: #fff8e0; padding: 10mm; border: 1mm solid #c9a227;
-    margin: 5mm; font-size: 10pt;
-  }
-</style>
-</head>
-<body>
+:root{--ink:#14202e;--bl:#1f5fa8}
+*{box-sizing:border-box}
+body{margin:0;background:#e9edf1;color:var(--ink);font:14px/1.45 "Avenir Next","Segoe UI",system-ui,sans-serif}
+header{padding:16px 20px 10px}
+h1{margin:0;font:700 20px/1.2 Georgia,"Times New Roman",serif}
+header p{margin:4px 0 0;color:#4b5a6a}
+nav{display:flex;gap:6px;flex-wrap:wrap;padding:0 20px 12px}
+button{font:inherit;border:1px solid #b9c4cf;background:#fff;padding:8px 14px;border-radius:6px;cursor:pointer;color:var(--ink)}
+button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+#st{margin:0 20px;background:#f8f9fb;border:1px solid #c5ced7;overflow:auto;position:relative}
+#st svg{display:block;width:100%;min-width:900px;height:auto}
+#c3{display:none;height:74vh;min-height:420px;touch-action:none;position:relative}
+#c3 canvas{width:100%;height:100%;display:block}
+.tb{position:absolute;top:10px;left:10px;display:flex;gap:6px;flex-wrap:wrap}
+.tb button{padding:6px 11px;font-size:13px;opacity:.95}
+footer{margin:12px 20px 24px}
+table{border-collapse:collapse;width:100%;background:#fff;font-size:13px}
+td{border:1px solid #b9c4cf;padding:6px 10px}
+td:nth-child(odd){color:#5a6978;width:120px}
+.lg{color:#4b5a6a;font-size:12.5px;margin:8px 0}
+#dl{display:flex;gap:6px;flex-wrap:wrap;padding:0 20px 12px}
+#dl button{background:var(--bl);color:#fff;border-color:var(--bl)}
+#dl button:disabled{opacity:.55}
+@media print{nav,#dl,.tb{display:none}body{background:#fff}}
+</style></head><body>
+<header><h1>Maison R+1 d'angle · terrain 20 × 20 m</h1>
+<p>2 magasins et un logement au RDC, 2 appartements à l'étage · cotes en mètres</p></header>
+<nav id="nv"></nav>
+<div id="dl"></div>
+<div id="st"><div id="d2"></div><div id="c3"><div class="tb"></div></div></div>
+<footer>
+<p class="lg">Murs extérieurs et mitoyens 20 cm (plein) · cloisons 10 cm (gris) · poteaux 25 × 25 cm sur trame 6 / 4 / 6 m · dimensions des pièces nettes, arrondies · le patio central est ouvert au ciel.</p>
+<table><tr><td>Projet</td><td>Maison R+1 : 2 magasins, logement RDC, 2 appartements</td><td>Maître d'ouvrage</td><td>Mme Wone</td></tr>
+<tr><td>Architecte</td><td>Cheikh Ahmadou Bamba Yade</td><td>Échelle</td><td>1/100 (2D)</td></tr>
+<tr><td>Phase</td><td>Avant-projet · indice A</td><td>Date</td><td>19/11/2026</td></tr></table>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+const S=50,INK='#1a2330',GR='#7d8894',BL='#1f5fa8',PA='#f8f9fb';
+const fm=n=>n.toFixed(2).replace('.',',');
+const X=x=>+(x*S).toFixed(1),Y=y=>+((16-y)*S).toFixed(1);
+const tx=(x,y,t,o={})=>{const z=o.z||10,l=String(t).split('|');
+return `<text transform="translate(${x} ${y})${o.r?` rotate(${o.r})`:''}" font-size="${z}" text-anchor="${o.a||'middle'}" fill="${o.c||INK}"${o.b?' font-weight="700"':''}${o.h===0?'':` stroke="${PA}" stroke-width="3" paint-order="stroke" stroke-linejoin="round"`}>${l.map((s,i)=>`<tspan x="0" dy="${i?z*1.2:-(l.length-1)*z*.6+z*.35}">${s}</tspan>`).join('')}</text>`};
+const tk=(x,y)=>`<line x1="${x-4}" y1="${y+4}" x2="${x+4}" y2="${y-4}"/>`;
+const dH=(a,b,y,t,y0)=>{const e=y<y0?-6:6;return `<g stroke="${BL}" stroke-width="1"><line x1="${a}" y1="${y}" x2="${b}" y2="${y}"/>${tk(a,y)}${tk(b,y)}<line x1="${a}" y1="${y0}" x2="${a}" y2="${y+e}" stroke-opacity=".45"/><line x1="${b}" y1="${y0}" x2="${b}" y2="${y+e}" stroke-opacity=".45"/></g>${tx((a+b)/2,y-8,t,{c:BL,z:11})}`};
+const dV=(a,b,x,t,x0)=>{const e=x<x0?-6:6;return `<g stroke="${BL}" stroke-width="1"><line x1="${x}" y1="${a}" x2="${x}" y2="${b}"/>${tk(x,a)}${tk(x,b)}<line x1="${x0}" y1="${a}" x2="${x+e}" y2="${a}" stroke-opacity=".45"/><line x1="${x0}" y1="${b}" x2="${x+e}" y2="${b}" stroke-opacity=".45"/></g>${tx(x-8,(a+b)/2,t,{c:BL,z:11,r:-90})}`};
+const DEF=`<defs><pattern id="hv" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="9" stroke="#86a881"/></pattern><pattern id="gr" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><line x1="0" y1="0" x2="0" y2="9" stroke="#9aa5af"/></pattern><pattern id="sto" width="40" height="15" patternUnits="userSpaceOnUse"><rect width="40" height="15" fill="#b9b5ad"/><path d="M0 .5H40M0 7.5H40M20 .5V7.5M0 7.5V15M40 7.5V15" stroke="#8d8982" fill="none"/></pattern><pattern id="wd" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="#b58a58"/><line x1="2" y1="0" x2="2" y2="10" stroke="#8a6238" stroke-width="1.6"/><line x1="7" y1="0" x2="7" y2="10" stroke="#c9a06b"/></pattern></defs>`;
 
-<div class="no-print">
-  <strong>📄 Instructions d'impression :</strong><br>
-  1. Ctrl+P (ou Cmd+P sur Mac)<br>
-  2. Destination : <b>Enregistrer au format PDF</b><br>
-  3. Format : <b>A3</b> — Orientation : <b>Paysage</b><br>
-  4. Marges : <b>Par défaut</b> ou <b>Aucune</b><br>
-  5. Échelle : <b>100 %</b> (ne pas cocher « ajuster à la page »)<br>
-  6. Options : <b>Graphiques d'arrière-plan</b> ✔ activé<br>
-  <br>
-  → Tu obtiens un PDF de 4 pages A3, une par plan.<br>
-  → Vérifie à la règle : 1 cm sur papier = 1 m réel (échelle 1/100).
-</div>
+/* ===== DONNÉES (m, origine = angle Sud-Ouest, x Est, y Nord) ===== */
+const EX=[['h',0,0,16,.2],['h',16,0,16,.2],['v',0,0,16,.2],['v',16,0,16,.2]];
+const mw=w=>w[0]=='h'?['h',w[1],16-w[3],16-w[2],w[4]]:['v',16-w[1],w[2],w[3],w[4]];
+const mo=p=>p[0]=='h'?['h',p[1],+(16-p[2]-p[3]).toFixed(2),p[3],p[4],1-(p[5]||0),p[6]??1]:['v',16-p[1],p[2],p[3],p[4],p[5]||0,-(p[6]??1)];
+const mf=f=>[f[0],+(16-f[1]-f[3]).toFixed(2),f[2],f[3],f[4],{e:'w',w:'e'}[f[5]]||f[5]];
+const mr=r=>[r[0],16-r[1],r[2],r[3]];
+const mfl=a=>[16-a[2],a[1],16-a[0],a[3],a[4]];
+const SHOP=[['cnt',1.2,12.8,3,.6],['etag',.15,11.1,.4,1.4]];
+const CH1=[['bed',3.2,.1,1.8,2.1,'s'],['nt',2.7,.1,.4,.4],['nt',5.05,.1,.4,.4],['war',.1,2.8,.55,2.5],['dou',.1,.1,.9,.9],['wc',1.35,.15,.4,.7,'s'],['lav',1.45,1.6,.35,.45]];
+const A0={
+w:[...EX,['h',11,0,16,.2],['v',6,0,16,.2],['v',10,0,16,.2],['h',12.6,0,6,.1],['h',12.6,10,16,.1],['v',2,0,5.5,.1],['h',8.6,0,6,.1],['h',2.6,0,2,.1],['h',5.5,0,6,.1],['v',14,0,5.5,.1],['h',2.6,14,16,.1],['h',4,6,10,.2],['h',7.5,6,10,.1],['h',9.6,6,8.5,.1],['v',8.5,9.6,11,.1],['h',5.5,10,16,.1]],
+o:[['h',16,.5,1,'d',0,-1],['h',16,1.7,4,'g'],['h',16,8.9,1,'d',0,-1],['h',16,10.3,4,'g'],['h',16,14.5,1,'d',1,-1],['h',12.6,2.5,.9,'d',0,-1],['h',12.6,12.6,.9,'d',0,-1],['v',16,13.2,2.2,'g'],
+['v',16,6.2,1.8,'w'],['v',16,9.2,1.4,'w'],['v',16,.8,.8,'w'],['v',6,.6,2.4,'g'],['v',10,.6,2.4,'g'],['h',4,6.8,2.4,'g'],['h',7.5,6.7,2.6,'o'],
+['v',6,4,.9,'d',0,-1],['v',10,4,.9,'d',0,1],['v',6,5.9,1.5,'o'],['v',10,5.9,1.3,'o'],['v',10,7.9,1,'o'],['h',11,8.7,1,'d',1,-1],['h',9.6,7.4,.8,'d',0,-1],
+['v',2,3.6,.9,'d',0,-1],['h',2.6,.5,.8,'d',0,-1],['v',14,3.6,.9,'d',0,1],['h',2.6,14.7,.8,'d',1,-1],['h',8.6,2.2,2,'o']],
+f:[...SHOP,...SHOP.map(mf),...CH1,...CH1.map(mf),['sof',11,5.7,2.4,.9,'s'],['cof',11.6,7,1.2,.6],['tv',11.2,10.55,2,.4],['tab',13.3,8,1.6,.9],
+['kit',.15,10.35,5.7,.6],['sink',1,10.43,.7,.45],['hob',3.2,10.43,.6,.5],['frg',5.2,9.7,.65,.65],['sof',.3,5.7,.9,2.3,'w'],['cof',1.4,6.3,.6,1.1],['tab',3.3,6.2,1.6,.9],
+['wc',6.2,10.2,.4,.65,'n'],['lav',7.1,10.45,.4,.3],['pot',6.15,.15,.4,.4],['pot',9.45,3.45,.4,.4]],
+r:[['Magasin 1|5,80 × 4,80|27,8 m²',3.4,14.4],['Réserve|4,80 × 1,50',3.2,11.8],['Magasin 2|5,80 × 4,80|27,8 m²',12.6,14.4],['Réserve|4,80 × 1,50',12.8,11.8],['Hall|escalier|18,2 m²',9.25,13],
+['Cuisine|5,80 × 2,40|13,9 m²',3,9.4],['Espace familial|5,80 × 3,10|18,0 m²',2,8],['Entrée|logement',7.2,8.3],['WC|visiteur',7.95,10.3],['Salon / séjour|5,80 × 5,30|30,7 m²',14.5,10],
+['Séjour central|3,80 × 5,30|12,5 m²',8,5.8],['Patio|3,80 × 3,80|14,4 m²',8,2],
+['Chambre 1|3,80 × 5,30|20,1 m²',3.9,3.7],['Dressing|4,9 m²',1.1,5.1],['SDB|4,7 m²',.95,1.45],['Chambre 2|3,80 × 5,30|20,1 m²',12.1,3.7],['Dressing|4,9 m²',14.9,5.1],['SDB|4,7 m²',15.05,1.45]],
+fl:[[0,11,6,16,'#fbf4e4'],[10,11,16,16,'#fbf4e4'],[6,11,10,16,'#eef0f2'],[0,0,2,2.6,'#e4eef7'],[14,0,16,2.6,'#e4eef7'],[0,8.6,6,11,'#eef2e6'],[0,5.5,6,8.6,'#f6f1e7'],[6,9.6,8.5,11,'#e4eef7'],[6,0,10,4,'#e3eedf'],[6,0,10,4,'url(#hv)']]};
+const A1w=[['v',4.8,11,16,.1],['v',6,11,16,.2],['h',11,0,4.8,.1],['h',11,6,8,.2],['h',9.8,3.7,6,.1],['v',2.5,4,11,.1],['h',5.8,0,2.5,.1],['v',3.7,4,9.8,.1],['h',4,0,6,.15],['h',4,6,8,.2],['v',8,4,11,.2],['v',6,0,4,.2],['v',2.4,0,4,.1],['h',7.6,6,8,.1],['v',6,7.6,11,.1]];
+const A1o=[['v',4.8,12.3,2,'o'],['v',6,14.9,.9,'d',0,-1],['h',9.8,4.2,.9,'d',0,-1],['v',2.5,4.6,.8,'d',0,-1],['v',2.5,9.95,.8,'d',0,-1],['h',11,1,1.2,'o'],['h',4,2.8,.9,'d',0,-1],['v',2.4,2.9,.8,'d',0,-1],['v',6,8.3,.8,'d',0,1],['v',6,.6,2.4,'g'],['h',4,6.3,1.4,'w'],['h',16,.8,1.8,'g'],['h',16,2.8,1.8,'g']];
+const A1f=[['tv',2.6,11.1,1.6,.4],['sof',2.3,13,2.2,.9,'n'],['cof',2.9,12.1,1,.6],['tab',.5,12.8,.9,1.6],
+['kit',.1,6.2,.6,3.8],['sink',.15,6.6,.5,.6],['hob',.15,8.2,.5,.5],['frg',.1,10.2,.65,.65],['wc',.3,4.1,.4,.7,'s'],['lav',.2,5.15,.4,.35],
+['bed',4.3,4.1,1.6,2,'s'],['nt',3.85,4.1,.4,.4],['nt',5.95,4.1,.4,.4],['war',3.8,6.3,.55,2.3],['bur',6.3,5.2,1.4,.6],['dou',7,10.15,.9,.8],['wc',6.2,10.3,.4,.65,'n'],['lav',7.4,7.75,.4,.35],
+['bed',3.2,.1,1.8,2.1,'s'],['nt',2.75,.1,.4,.4],['nt',5.05,.1,.4,.4],['war',4.6,3.4,1.2,.5],['dou',.1,.1,.9,.9],['wc',1.4,.15,.4,.7,'s'],['lav',.2,2.9,.45,.35]];
+const A1r=[['Salon|4,60 × 4,80|22,1 m²',3.9,14.9],['Couloir 1,20 × 5,00',5.4,13,-90],['Couloir|1,20 × 3,50',4.2,10.4],['Couloir 1,20 × 5,80',3.1,6.9,-90],['Chambre 2|4,00 × 5,80',5,7],['SDB|6,8 m²',7.4,9],['Cuisine|2,40 × 5,00|12,0 m²',1.65,8],['WC|2,40 × 1,80',1.15,5],['Chambre|parentale|3,60 × 3,80',4.4,2.7],['SDB|privative|2,20 × 3,80',1.25,1.9]];
+const A1=[[0,0,2.4,4,'#e4eef7'],[0,4,2.5,5.8,'#e4eef7'],[0,5.8,2.5,11,'#eef2e6'],[6,7.6,8,11,'#e4eef7'],[0,16,6,17.5,'#eeeae2'],[2.5,9.8,6,11,'#f2f0ea'],[2.5,4,3.7,9.8,'#f2f0ea'],[4.8,11,6,16,'#f2f0ea']];
+const E={w:[...EX,...A1w,...A1w.map(mw)],o:[...A1o,...A1o.map(mo),['v',16,12.6,1.8,'w'],['v',16,1.2,1.8,'w']],f:[...A1f,...A1f.map(mf)],r:[...A1r,...A1r.map(mr),['Palier|commun',9.25,13.2],['Balcon|6,00 × 1,50',3,16.75],['Balcon|6,00 × 1,50',13,16.75],['Vide|patio',8,2]],
+fl:[[6,11,10,16,'#eef0f2'],[6,0,10,4,'#e3eedf'],[6,0,10,4,'url(#hv)'],...A1,...A1.map(mfl)]};
 
-<!-- ============ PAGE 1 : PLAN RDC ============ -->
-<div class="page">
-  <h2>1. PLAN RDC — Échelle 1/100</h2>
-  <div class="sub">2 magasins + logement 2 ch. + patio + escalier indépendant — Nord en haut</div>
+/* ===== SYMBOLES ===== */
+function F(t,x,y,w,d,r){const a=X(x),b=Y(y+d),W=w*S,H=d*S;
+const R=(x,y,w,h,rx,f)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx||0}"${f?` fill="${f}"`:''}/>`,L=(a,b,c,d)=>`<line x1="${a}" y1="${b}" x2="${c}" y2="${d}"/>`;
+let s='<g fill="#fff" stroke="#59646f" stroke-width="1">';
+if(t=='bed'){s+=R(a,b,W,H,3)+R(a+3,b+3,W-6,H-6,2,'#eef2f6');const pw=(W-12)/2,py=r=='n'?b+5:b+H-21;s+=R(a+4,py,pw,16,4)+R(a+8+pw,py,pw,16,4)+L(a+3,r=='n'?b+H*.4:b+H*.6,a+W-3,r=='n'?b+H*.4:b+H*.6)}
+else if(t=='sof'){s+=R(a,b,W,H,4,'#eef1f4');const bk=r=='e'?R(a+W-14,b,14,H,3,'#dde2e8'):r=='w'?R(a,b,14,H,3,'#dde2e8'):r=='n'?R(a,b,W,14,3,'#dde2e8'):R(a,b+H-14,W,14,3,'#dde2e8');s+=bk;const v=W<H;for(let i=1;i<3;i++)s+=v?L(a+3,b+H*i/3,a+W-3,b+H*i/3):L(a+W*i/3,b+3,a+W*i/3,b+H-3)}
+else if(t=='tab'){s+=R(a,b,W,H,3,'#f3ede4');const n=Math.max(w,d)>1.7?3:2;for(let i=0;i<n;i++){if(W>=H){const c=a+(i+.5)*W/n-9;s+=R(c,b-14,18,12,3)+R(c,b+H+2,18,12,3)}else{const c=b+(i+.5)*H/n-9;s+=R(a-14,c,12,18,3)+R(a+W+2,c,12,18,3)}}}
+else if(t=='cof'||t=='cnt'||t=='bur')s+=R(a,b,W,H,t=='cof'?8:2,'#f3ede4');
+else if(t=='nt')s+=R(a,b,W,H,2,'#f1f3f5');
+else if(t=='tv')s+=R(a,b,W,H,1,'#3a4654');
+else if(t=='war')s+=R(a,b,W,H,0,'#f6f3ee')+L(a,b,a+W,b+H)+L(a+W,b,a,b+H);
+else if(t=='kit')s+=R(a,b,W,H,0,'#eceff2');
+else if(t=='hob'){s+=R(a,b,W,H,2,'#dfe3e8');const q=[[.3,.3],[.7,.3],[.3,.7],[.7,.7]];q.forEach(p=>s+=`<circle cx="${a+W*p[0]}" cy="${b+H*p[1]}" r="${Math.min(W,H)*.17}"/>`)}
+else if(t=='sink')s+=R(a,b,W,H,2,'#dfe3e8')+R(a+4,b+4,W-8,H-8,4)+`<circle cx="${a+W/2}" cy="${b+H/2}" r="2"/>`;
+else if(t=='frg')s+=R(a,b,W,H,2,'#f1f3f5')+L(a,b,a+W,b+H);
+else if(t=='dou')s+=R(a,b,W,H,0,'#e6f1f8')+L(a,b,a+W,b+H)+`<circle cx="${a+W/2}" cy="${b+H/2}" r="3"/>`;
+else if(t=='wc'){const tk=H*.3,by=r=='n'?b+tk:b;s+=R(a,r=='n'?b:b+H-tk,W,tk,2)+`<ellipse cx="${a+W/2}" cy="${r=='n'?b+tk+(H-tk)/2:b+(H-tk)/2}" rx="${W/2-1}" ry="${(H-tk)/2}"/>`}
+else if(t=='lav')s+=R(a,b,W,H,3,'#f1f3f5')+`<ellipse cx="${a+W/2}" cy="${b+H/2}" rx="${W/2-4}" ry="${H/2-4}"/>`;
+else if(t=='etag'){s+=R(a,b,W,H,0,'#f3ede4');const v=W<H,n=Math.floor((v?H:W)/9);for(let i=1;i<n;i++)s+=v?L(a,b+i*9,a+W,b+i*9):L(a+i*9,b,a+i*9,b+H)}
+else if(t=='mach')s+=R(a,b,W,H,2,'#f1f3f5')+`<circle cx="${a+W/2}" cy="${b+H/2}" r="${W*.32}"/>`;
+else if(t=='bain')s+=R(a,b,W,H,6,'#f1f3f5')+R(a+5,b+5,W-10,H-10,10,'#e6f1f8');
+else if(t=='pot')s+=`<circle cx="${a+W/2}" cy="${b+H/2}" r="${W/2}" fill="#bcd7b4"/>`;
+return s+'</g>'}
+function door(p){const[t,c,a,l,k,h,d]=p,h_=t=='h',H=h_?[h?a+l:a,c]:[c,h?a+l:a],J=h_?[h?a:a+l,c]:[c,h?a:a+l],E=h_?[H[0],c+d*l]:[c+d*l,H[1]];
+const a0=Math.atan2(E[1]-H[1],E[0]-H[0]),a1=Math.atan2(J[1]-H[1],J[0]-H[0]);let dl=a1-a0;while(dl>Math.PI)dl-=2*Math.PI;while(dl<-Math.PI)dl+=2*Math.PI;
+let pts='';for(let i=0;i<=14;i++){const q=a0+dl*i/14;pts+=`${X(H[0]+l*Math.cos(q))},${Y(H[1]+l*Math.sin(q))} `}
+return `<line x1="${X(H[0])}" y1="${Y(H[1])}" x2="${X(E[0])}" y2="${Y(E[1])}" stroke="${INK}" stroke-width="2"/><polyline points="${pts}" fill="none" stroke="${GR}" stroke-width="1"/>`}
+function opening(p){const[t,c,a,l,k]=p,h_=t=='h';let s='',e=h_?`<rect x="${X(a)}" y="${Y(c)-8}" width="${l*S}" height="16" fill="${PA}"/>`:`<rect x="${X(c)-8}" y="${Y(a+l)}" width="16" height="${l*S}" fill="${PA}"/>`;
+const ln=(o,w,c2)=>h_?`<line x1="${X(a)}" y1="${Y(c)+o}" x2="${X(a+l)}" y2="${Y(c)+o}" stroke="${c2||INK}" stroke-width="${w}"/>`:`<line x1="${X(c)+o}" y1="${Y(a)}" x2="${X(c)+o}" y2="${Y(a+l)}" stroke="${c2||INK}" stroke-width="${w}"/>`;
+const jb=u=>h_?`<line x1="${X(u)}" y1="${Y(c)-6}" x2="${X(u)}" y2="${Y(c)+6}" stroke="${INK}" stroke-width="1.5"/>`:`<line x1="${X(c)-6}" y1="${Y(u)}" x2="${X(c)+6}" y2="${Y(u)}" stroke="${INK}" stroke-width="1.5"/>`;
+s=e+jb(a)+jb(a+l);
+if(k=='d')s+=door(p);else if(k=='w')s+=ln(-3,1,GR)+ln(0,1.6)+ln(3,1,GR);
+else if(k=='g'){s+=ln(-2.5,1)+ln(2.5,1);const n=Math.max(1,Math.round(l));for(let i=1;i<n;i++){const u=a+l*i/n;s+=jb(u)}}
+return s}
+function stairs(lv){const st=(x1,x2,ya,yb,n,dash)=>{let s=`<rect x="${X(x1)}" y="${Y(Math.max(ya,yb))}" width="${(x2-x1)*S}" height="${Math.abs(yb-ya)*S}" fill="#fff" stroke="${GR}"${dash?' stroke-dasharray="5 3"':''}/>`;for(let i=1;i<n;i++){const y=ya+(yb-ya)*i/n;s+=`<line x1="${X(x1)}" y1="${Y(y)}" x2="${X(x2)}" y2="${Y(y)}" stroke="${GR}"${dash?' stroke-dasharray="5 3"':''}/>`}return s};
+const ar=(x,y1,y2)=>`<line x1="${X(x)}" y1="${Y(y1)}" x2="${X(x)}" y2="${Y(y2)}" stroke="${BL}" stroke-width="1.5"/><polygon points="${X(x)},${Y(y2)} ${X(x)-5},${Y(y2)+(y2>y1?9:-9)} ${X(x)+5},${Y(y2)+(y2>y1?9:-9)}" fill="${BL}"/>`;
+let s=`<rect x="${X(6.2)}" y="${Y(12.46)}" width="${2.3*S}" height="${1.26*S}" fill="#fff" stroke="${GR}"${lv?' stroke-dasharray="5 3"':''}/>`;
+return s+(lv?st(7.4,8.5,14.7,12.46,9,1)+st(6.2,7.3,12.46,14.7,9)+ar(6.75,12.7,14.5):st(7.4,8.5,14.7,12.46,9)+st(6.2,7.3,12.46,14.7,9,1)+ar(7.95,14.5,12.7))}
 
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="-80 -80 1900 1900" font-family="Arial" font-size="14">
-    <rect x="-80" y="-80" width="1900" height="1900" fill="#fafafa"/>
-    <rect x="0" y="0" width="200" height="200" fill="#e8f4e8" stroke="#888" stroke-dasharray="4,3" stroke-width="1"/>
-    <text x="100" y="-10" text-anchor="middle" font-size="11" fill="#555">TERRAIN 20 × 20 m</text>
-    <g transform="translate(0,40)">
-      <rect x="0" y="0" width="160" height="160" fill="#fff"/>
-      <rect x="0" y="0" width="160" height="160" fill="none" stroke="#000" stroke-width="2"/>
-      <line x1="60" y1="0" x2="60" y2="160" stroke="#888" stroke-width="1"/>
-      <line x1="100" y1="0" x2="100" y2="160" stroke="#888" stroke-width="1"/>
-      <line x1="0" y1="105" x2="160" y2="105" stroke="#888" stroke-width="1"/>
-      <line x1="0" y1="50" x2="160" y2="50" stroke="#888" stroke-width="1"/>
-      <line x1="0" y1="125" x2="160" y2="125" stroke="#888" stroke-width="1"/>
-      <rect x="60" y="85" width="40" height="40" fill="#fff8e0" stroke="#c9a227" stroke-width="1" stroke-dasharray="3,2"/>
-      <text x="80" y="108" text-anchor="middle" font-size="10" fill="#8a6d00">PATIO</text>
-      <text x="80" y="120" text-anchor="middle" font-size="9" fill="#8a6d00">3.80×3.80</text>
-      <rect x="0" y="0" width="60" height="50" fill="#e6f0ff"/>
-      <text x="30" y="20" text-anchor="middle" font-size="11" font-weight="bold">MAGASIN 1</text>
-      <text x="30" y="33" text-anchor="middle" font-size="9">5.80 × 4.80</text>
-      <text x="30" y="44" text-anchor="middle" font-size="9">27.8 m²</text>
-      <rect x="100" y="0" width="60" height="50" fill="#e6f0ff"/>
-      <text x="130" y="20" text-anchor="middle" font-size="11" font-weight="bold">MAGASIN 2</text>
-      <text x="130" y="33" text-anchor="middle" font-size="9">5.80 × 4.80</text>
-      <text x="130" y="44" text-anchor="middle" font-size="9">27.8 m²</text>
-      <rect x="60" y="0" width="40" height="50" fill="#fff2e6"/>
-      <text x="80" y="14" text-anchor="middle" font-size="10" font-weight="bold">HALL +</text>
-      <text x="80" y="25" text-anchor="middle" font-size="10" font-weight="bold">ESCALIER</text>
-      <text x="80" y="36" text-anchor="middle" font-size="9">3.80 × 4.80</text>
-      <text x="80" y="46" text-anchor="middle" font-size="9">18.2 m²</text>
-      <g stroke="#555" stroke-width="0.8">
-        <line x1="62" y1="40" x2="78" y2="40"/><line x1="62" y1="42" x2="78" y2="42"/>
-        <line x1="62" y1="44" x2="78" y2="44"/><line x1="62" y1="46" x2="78" y2="46"/>
-        <line x1="62" y1="48" x2="78" y2="48"/>
-      </g>
-      <text x="40" y="72" text-anchor="middle" font-size="11" font-weight="bold">CHAMBRE 2</text>
-      <text x="40" y="85" text-anchor="middle" font-size="9">3.80 × 5.30</text>
-      <text x="40" y="96" text-anchor="middle" font-size="9">20.1 m²</text>
-      <text x="80" y="62" text-anchor="middle" font-size="10" font-weight="bold">S. À MANGER</text>
-      <text x="80" y="74" text-anchor="middle" font-size="9">3.80 × 3.30</text>
-      <text x="110" y="58" text-anchor="middle" font-size="9" font-weight="bold">WC</text>
-      <text x="110" y="67" text-anchor="middle" font-size="7">1.80×1.80</text>
-      <text x="140" y="60" text-anchor="middle" font-size="9" font-weight="bold">ENTRÉE</text>
-      <text x="130" y="82" text-anchor="middle" font-size="11" font-weight="bold">SALON</text>
-      <text x="130" y="95" text-anchor="middle" font-size="9">5.80 × 3.30</text>
-      <text x="130" y="104" text-anchor="middle" font-size="9">19.1 m²</text>
-      <text x="140" y="125" text-anchor="middle" font-size="11" font-weight="bold">CUISINE</text>
-      <text x="140" y="138" text-anchor="middle" font-size="9">3.80 × 5.30</text>
-      <text x="140" y="150" text-anchor="middle" font-size="9">20.1 m²</text>
-      <text x="40" y="122" text-anchor="middle" font-size="11" font-weight="bold">CH. PARENTALE</text>
-      <text x="40" y="135" text-anchor="middle" font-size="9">3.80 × 5.30</text>
-      <text x="40" y="147" text-anchor="middle" font-size="9">20.1 m²</text>
-      <rect x="80" y="125" width="20" height="35" fill="#e6f7ff"/>
-      <text x="90" y="145" text-anchor="middle" font-size="8" transform="rotate(-90 90 145)">SDB</text>
-      <path d="M160,60 A10,10 0 0,0 150,70" fill="none" stroke="#0055cc" stroke-width="1"/>
-      <line x1="5" y1="0" x2="45" y2="0" stroke="#0055cc" stroke-width="3"/>
-      <path d="M45,0 A10,10 0 0,1 55,10" fill="none" stroke="#0055cc" stroke-width="1"/>
-      <line x1="105" y1="0" x2="145" y2="0" stroke="#0055cc" stroke-width="3"/>
-      <path d="M145,0 A10,10 0 0,1 155,10" fill="none" stroke="#0055cc" stroke-width="1"/>
-      <path d="M85,0 A10,10 0 0,1 95,10" fill="none" stroke="#0055cc" stroke-width="1"/>
-      <line x1="60" y1="90" x2="60" y2="110" stroke="#0055cc" stroke-width="2"/>
-      <line x1="100" y1="90" x2="100" y2="110" stroke="#0055cc" stroke-width="2"/>
-      <g stroke="#333" stroke-width="0.6" fill="#333" font-size="10">
-        <line x1="0" y1="170" x2="160" y2="170"/>
-        <text x="80" y="185" text-anchor="middle">16.00 m</text>
-      </g>
-      <g fill="#000">
-        <rect x="-2" y="-2" width="4" height="4"/><rect x="58" y="-2" width="4" height="4"/>
-        <rect x="98" y="-2" width="4" height="4"/><rect x="158" y="-2" width="4" height="4"/>
-        <rect x="-2" y="48" width="4" height="4"/><rect x="58" y="48" width="4" height="4"/>
-        <rect x="98" y="48" width="4" height="4"/><rect x="158" y="48" width="4" height="4"/>
-        <rect x="-2" y="103" width="4" height="4"/><rect x="58" y="103" width="4" height="4"/>
-        <rect x="98" y="103" width="4" height="4"/><rect x="158" y="103" width="4" height="4"/>
-        <rect x="-2" y="158" width="4" height="4"/><rect x="58" y="158" width="4" height="4"/>
-        <rect x="98" y="158" width="4" height="4"/><rect x="158" y="158" width="4" height="4"/>
-      </g>
-    </g>
-    <text x="100" y="-40" text-anchor="middle" font-size="13" font-weight="bold" fill="#a00">↑ RUE PRINCIPALE (NORD)</text>
-    <text x="220" y="120" text-anchor="middle" font-size="13" font-weight="bold" fill="#a00" transform="rotate(90 220 120)">RUE (EST) →</text>
-    <g transform="translate(180,10)">
-      <circle r="12" fill="#fff" stroke="#333" stroke-width="1"/>
-      <path d="M0,-10 L3,-2 L0,0 L-3,-2 Z" fill="#a00"/>
-      <text y="-14" text-anchor="middle" font-size="10" font-weight="bold">N</text>
-    </g>
-  </svg>
+/* ===== PLANS ===== */
+function plan(L,lv){const nb=lv?110:35,top=-(nb+130);let s=DEF,GX=[0,6,10,16],GY=[0,5.5,11,16];
+s+=`<rect x="-14" y="0" width="14" height="${16*S}" fill="url(#gr)"/><rect x="0" y="${16*S}" width="${16*S}" height="14" fill="url(#gr)"/>`;
+L.fl.forEach(([a,b,c,d,col])=>s+=`<rect x="${X(a)}" y="${Y(d)}" width="${(c-a)*S}" height="${(d-b)*S}" fill="${col}"${col[0]=='u'?'':' stroke="none"'}/>`);
+if(lv)[[0,6],[10,16]].forEach(a=>s+=`<rect x="${X(a[0])}" y="${Y(17.5)}" width="${6*S}" height="${1.5*S}" fill="none" stroke="${INK}" stroke-width="1.2"/><rect x="${X(a[0])+4}" y="${Y(17.5)+4}" width="${6*S-8}" height="${1.5*S-8}" fill="none" stroke="${GR}" stroke-width="1"/>`);
+s+=stairs(lv);
+L.f.forEach(a=>s+=F(...a));
+L.w.forEach(([t,c,a,b,th])=>{const e=(t=='h'&&(c==0||c==16)&&th==.2)?.1:0,col=th>=.2?INK:'#76818d';a-=e;b+=e;s+=t=='h'?`<rect x="${X(a)}" y="${Y(c)-th*S/2}" width="${(b-a)*S}" height="${th*S}" fill="${col}"/>`:`<rect x="${X(c)-th*S/2}" y="${Y(b)}" width="${th*S}" height="${(b-a)*S}" fill="${col}"/>`});
+L.o.forEach(p=>s+=opening(p));
+GX.forEach(x=>GY.forEach(y=>s+=`<rect x="${X(x)-6.25}" y="${Y(y)-6.25}" width="12.5" height="12.5" fill="#0b1220" stroke="${PA}" stroke-width="1"/>`));
+L.r.forEach(r=>s+=tx(X(r[1]),Y(r[2]),r[0],{z:10,r:r[3]}));
+const ny=-nb;L.o.filter(p=>p[0]=='h'&&p[1]==16).sort((a,b)=>a[2]-b[2]).forEach(p=>s+=dH(X(p[2]),X(p[2]+p[3]),ny,fm(p[3]),0));
+for(let i=0;i<3;i++){s+=dH(X(GX[i]),X(GX[i+1]),ny-35,fm(GX[i+1]-GX[i]),0)+dH(X(GX[i]),X(GX[i+1]),800+35,fm(GX[i+1]-GX[i]),800)}
+s+=dH(0,800,ny-70,'16,00',0)+dH(0,800,870,'16,00',800);
+for(let i=0;i<3;i++){s+=dV(Y(GY[i]),Y(GY[i+1]),-35,fm(GY[i+1]-GY[i]),0)+dV(Y(GY[i]),Y(GY[i+1]),835,fm(GY[i+1]-GY[i]),800)}
+s+=dV(800,0,-70,'16,00',0)+dV(800,0,870,'16,00',800);
+if(!lv)s+=`<line x1="${X(7.75)}" y1="-6" x2="${X(7.75)}" y2="806" stroke="#c0392b" stroke-width="1.2" stroke-dasharray="14 4 3 4"/>`+[-20,820].map(y=>`<circle cx="${X(7.75)}" cy="${y}" r="10" fill="#fff" stroke="#c0392b"/>${tx(X(7.75),y,'A',{c:'#c0392b',z:12,b:1,h:0})}`).join('');
+s+=tx(400,ny-95,'RUE PRINCIPALE · NORD',{z:12,b:1})+tx(400,908,'MITOYEN SUD',{z:12,b:1})+tx(-100,400,'MITOYEN OUEST',{z:12,b:1,r:-90})+tx(905,400,'RUE EST',{z:12,b:1,r:90});
+s+=`<g transform="translate(900 ${top+40})"><circle r="17" fill="#fff" stroke="${INK}"/><polygon points="0,-13 5,6 0,2 -5,6" fill="${INK}"/>${tx(0,-24,'N',{z:12,b:1})}</g>`;
+s+=tx(-100,top+22,(lv?'PLAN DE L\'ÉTAGE R+1':'PLAN DU REZ-DE-CHAUSSÉE')+' · 1/100',{z:16,b:1,a:'start'});
+return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-110 ${top} 1030 ${800-top+125}" font-family="Avenir Next,Segoe UI,system-ui,sans-serif">${s}</svg>`}
 
-  <div class="cartouche">
-    <b>Projet :</b> Maison R+1 d'angle 20×20 m — Mme Wone &nbsp;|&nbsp;
-    <b>Architecte :</b> C.A.B. Yade &nbsp;|&nbsp; <b>Indice A</b> — 19/11/2026 &nbsp;|&nbsp;
-    <b>Plan RDC :</b> 2 magasins + logement 2 ch. + patio + escalier indép. &nbsp;|&nbsp;
-    1 m = 10 px — Cotes nettes intérieures — Nord en haut
-  </div>
-</div>
+function facade(){const B=430,Z=z=>+(B-z*S).toFixed(1),R=(x,y,w,h,f,sw)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${f}" stroke="${INK}" stroke-width="${sw??1}"/>`;
+let s=DEF+`<rect x="-130" y="${B}" width="1130" height="45" fill="url(#gr)"/><line x1="-130" y1="${B}" x2="1000" y2="${B}" stroke="${INK}" stroke-width="2"/>`;
+const fl=[[0,6],[10,16]];
+s+=R(0,Z(6.2),800,6.2*S,'#ece8df',1.5);
+fl.forEach(a=>{s+=R(X(a[0]),Z(3),6*S,3*S,'#d8dce0',0)+R(X(a[0]),Z(6),6*S,2.8*S,'#e2d8c4',0);for(let z=3.8;z<6;z+=.6)s+=`<line x1="${X(a[0])}" y1="${Z(z)}" x2="${X(a[1])}" y2="${Z(z)}" stroke="#cbbfa6" stroke-width=".7"/>`;s+=R(X(a[0]),Z(.6),6*S,.6*S,'url(#sto)',.8)});
+s+=R(X(6),Z(6),4*S,6*S,'url(#wd)',1.2)+R(0,Z(3.45),800,.45*S,'#cdc8bc',1.2)+R(-3,Z(6.2),806,.2*S,'#bfb9ac',1)+R(-3,Z(7),806,.8*S,'#dfdacd',1.5)+R(-6,Z(7)-5,812,5,'#8d897f',1);
+const op=(p,z0)=>{const x=X(p[2]),w=p[3]*S,k=p[4],h=k=='d'?2.1:2.4,y=Z(z0+h),H=h*S,hall=p[2]>8&&p[2]<9;let g='';
+if(k=='d'){g+=R(x,y,w,H,hall?'#7a5532':'#3b4a5a',1.5);if(hall)for(let i=1;i<4;i++)g+=`<line x1="${x+w*i/4}" y1="${y+4}" x2="${x+w*i/4}" y2="${y+H-4}" stroke="#4e341c"/>`;else g+=R(x+5,y+6,w-10,H*.55,'#bcd8e6',.8);g+=`<circle cx="${x+(p[5]?9:w-9)}" cy="${Z(z0+1)}" r="2.5" fill="#d9d2c4"/>`}
+else{g+=R(x,y,w,H,'#bcd8e6',1.5);const n=Math.max(1,Math.round(p[3]));for(let i=1;i<n;i++)g+=`<line x1="${x+w*i/n}" y1="${y}" x2="${x+w*i/n}" y2="${y+H}" stroke="${INK}"/>`;g+=`<line x1="${x}" y1="${y+H*.28}" x2="${x+w}" y2="${y+H*.28}" stroke="${INK}"/><polyline points="${x+6},${y+H-6} ${x+w*.35},${y+6}" stroke="#fff" stroke-width="3" opacity=".5" fill="none"/>`}
+return g};
+A0.o.filter(p=>p[0]=='h'&&p[1]==16).forEach(p=>s+=op(p,0));E.o.filter(p=>p[0]=='h'&&p[1]==16).forEach(p=>s+=op(p,3.2));
+[[.5,5.7,'MAGASIN 1'],[10.3,15.5,'MAGASIN 2']].forEach(a=>s+=R(X(a[0]),Z(3),(a[1]-a[0])*S,.45*S,'#2d3a4a',1)+tx(X((a[0]+a[1])/2),Z(2.78),a[2],{c:'#fff',z:12,b:1,h:0}));
+fl.forEach(a=>{s+=R(X(a[0]),Z(3.2),6*S,9,'#d6d0c3',1.2)+R(X(a[0]),Z(4.2),6*S,S,'rgba(175,205,228,.45)',.8)+`<line x1="${X(a[0])}" y1="${Z(4.2)}" x2="${X(a[1])}" y2="${Z(4.2)}" stroke="#2d3a4a" stroke-width="3"/>`;for(let x=a[0];x<=a[1]+.01;x+=1.5)s+=`<line x1="${X(x)}" y1="${Z(3.2)}" x2="${X(x)}" y2="${Z(4.2)}" stroke="#2d3a4a" stroke-width="2"/>`});
+[[0,3.2],[3.2,6.2],[6.2,7]].forEach(a=>s+=dV(Z(a[0]),Z(a[1]),-40,fm(a[1]-a[0]),-3));s+=dV(Z(0),Z(7),-90,'7,00',-3);
+[['±0,00','Niveau fini RDC',0],['+3,20','Plancher R+1',3.2],['+6,20','Dessus toiture-terrasse',6.2],['+7,00','Acrotère',7]].forEach(a=>s+=`<line x1="800" y1="${Z(a[2])}" x2="832" y2="${Z(a[2])}" stroke="${BL}" stroke-dasharray="4 3"/><polygon points="812,${Z(a[2])} 820,${Z(a[2])-9} 828,${Z(a[2])}" fill="none" stroke="${BL}"/>`+tx(838,Z(a[2]),a[0]+'  '+a[1],{a:'start',c:BL,z:11}));
+for(let i=0;i<3;i++){const g=[0,6,10,16];s+=dH(X(g[i]),X(g[i+1]),B+70,fm(g[i+1]-g[i]),B+45)}s+=dH(0,800,B+105,'16,00',B+45);
+[['url(#sto)','Soubassement en pierre, h 0,60'],['url(#wd)','Claustra et brise-soleil bois sur la cage d\'escalier'],['#d8dce0','Enduit gris clair (RDC)'],['#e2d8c4','Enduit sable à joints horizontaux (étage)'],['#cdc8bc','Bandeaux et corniche béton'],['#bcd8e6','Vitrages aluminium et garde-corps vitrés'],['#2d3a4a','Enseignes et menuiseries métalliques']].forEach((a,i)=>s+=R(0,B+135+i*22,14,14,a[0],1)+tx(24,B+143+i*22,a[1],{a:'start',z:12,h:0}));
+s+=tx(-130,0,'FAÇADE PRINCIPALE (NORD, RUE) · 1/100',{z:16,b:1,a:'start'});
+return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-140 -25 1190 ${B+330}" font-family="Avenir Next,Segoe UI,system-ui,sans-serif">${s}</svg>`}
 
-<!-- ============ PAGE 2 : PLAN ÉTAGE ============ -->
-<div class="page">
-  <h2>2. PLAN ÉTAGE R+1 — Échelle 1/100</h2>
-  <div class="sub">2 appartements symétriques A (Ouest) / B (Est) + palier commun + balcons</div>
+function coupe(){const B=430,Z=z=>+(B-z*S).toFixed(1),Q=y=>+((16-y)*S).toFixed(1);let s=DEF+`<rect x="-120" y="${B}" width="1040" height="${1.5*S+8}" fill="url(#gr)"/>`;
+const cut=(a,b,z1,z2)=>`<rect x="${Q(b)}" y="${Z(z2)}" width="${(b-a)*S}" height="${(z2-z1)*S}" fill="#2b3745"/>`;
+[[15.9,16.1,0,3],[10.9,11.1,0,3],[9.55,9.65,2.1,3],[7.45,7.55,2.4,3],[3.9,4.1,2.4,3],[-.1,.1,0,3],[15.9,16.1,3.2,6],[10.9,11.1,3.2,6],[7.55,7.65,3.2,6],[3.9,4.1,3.2,6],[-.1,.1,3.2,6],[4,11.2,3,3.2],[14.7,16.1,3,3.2],[4,16.1,6,6.2],[15.9,16.1,6.2,7],[-.1,.1,6.2,7],[-.1,16.1,-.12,0]].forEach(a=>s+=cut(...a));
+[16,11,4,0].forEach(c=>s+=cut(c-.55,c+.55,-1.5,-1.1)+cut(c-.2,c+.2,-1.1,0));
+let P=[[14.7,0]];for(let i=0;i<9;i++){const z=(i+1)*.178;P.push([14.7-i*.28,z],[14.7-(i+1)*.28,z])}P.push([11.2,1.6],[11.2,1.45],[12.46,1.45],[14.49,0]);
+s+=`<polygon points="${P.map(p=>Q(p[0])+','+Z(p[1])).join(' ')}" fill="#4a5866" stroke="#2b3745"/>`;
+let q=[[12.46,1.6]];for(let i=0;i<9;i++){const z=1.6+(i+1)*.178;q.push([12.46+i*.28,z],[12.46+(i+1)*.28,z])}
+s+=`<polyline points="${q.map(p=>Q(p[0])+','+Z(p[1])).join(' ')}" fill="none" stroke="${GR}" stroke-dasharray="5 3"/>`;
+s+=`<line x1="-120" y1="${B}" x2="0" y2="${B}" stroke="${INK}" stroke-width="2"/><line x1="800" y1="${B}" x2="920" y2="${B}" stroke="${INK}" stroke-width="2"/>`;
+s+=tx(Q(13),Z(2.6),'Hall escalier',{z:11})+tx(Q(10.3),Z(1.5),'WC visiteur',{z:10})+tx(Q(8.55),Z(1.5),'Entrée logement',{z:10})+tx(Q(5.75),Z(1.5),'Séjour central',{z:11})+tx(Q(2),Z(3.2),'Patio|ouvert au ciel',{z:11})
++tx(Q(13.3),Z(4.6),'Palier',{z:11})+tx(Q(12.95),Z(3.9),'trémie 2,60 × 2,50',{z:9})+tx(Q(9.3),Z(4.6),'SDB',{z:10})+tx(Q(5.8),Z(4.9),'Chambre 2',{z:11})
++tx(Q(9.25),Z(3.1),'dalle 20',{z:9,c:'#fff',h:0})+tx(Q(6),Z(3.1),'dalle 20',{z:9,c:'#fff',h:0})+tx(Q(9.25),Z(6.1),'dalle 20',{z:9,c:'#fff',h:0});
+s+=dV(Z(3),Z(0),Q(4.5),'H.s.p. 3,00',Q(4.5))+dV(Z(6),Z(3.2),Q(4.5),'H.s.p. 2,80',Q(4.5));
+s+=dV(Z(0),Z(-1.5),830,'1,50',806)+[[0,3.2],[3.2,6.2],[6.2,7]].map(a=>dV(Z(a[0]),Z(a[1]),830,fm(a[1]-a[0]),806)).join('')+dV(Z(0),Z(7),880,'7,00',806);
+[['+7,00','Acrotère',7],['+6,20','Toiture-terrasse',6.2],['+3,20','Plancher R+1',3.2],['±0,00','RDC fini',0],['-0,60','Soubassement',-.6],['-1,50','Assise fondations',-1.5]].forEach(a=>s+=tx(-110,Z(a[2]),a[0]+'  '+a[1],{a:'end',c:BL,z:11}));
+const C=B+1.5*S+40,sg=[16,11,9.6,7.5,4,0];for(let i=0;i<5;i++)s+=dH(Q(sg[i]),Q(sg[i+1]),C,fm(sg[i]-sg[i+1]),B+75);s+=dH(0,800,C+35,'16,00',B+75);
+s+=tx(0,Z(7.6),'NORD · rue',{a:'start',z:11,b:1})+tx(800,Z(7.6),'SUD · mitoyen',{a:'end',z:11,b:1});
+s+=tx(-260,-8,'COUPE AA · 1/100 · plan de coupe x = 7,75 m, vue vers l\'Ouest',{z:16,b:1,a:'start'});
+return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-270 -30 1210 ${C+95}" font-family="Avenir Next,Segoe UI,system-ui,sans-serif">${s}</svg>`}
 
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="-80 -80 1900 1900" font-family="Arial" font-size="14">
-    <rect x="-80" y="-80" width="1900" height="1900" fill="#fafafa"/>
-    <g transform="translate(0,40)">
-      <rect x="0" y="0" width="160" height="160" fill="#fff"/>
-      <rect x="0" y="0" width="160" height="160" fill="none" stroke="#000" stroke-width="2"/>
-      <line x1="80" y1="0" x2="80" y2="160" stroke="#aaa" stroke-width="0.5" stroke-dasharray="2,2"/>
-      <rect x="0" y="0" width="60" height="50" fill="#fff8e6"/>
-      <text x="30" y="20" text-anchor="middle" font-size="10" font-weight="bold">SALON A</text>
-      <text x="30" y="33" text-anchor="middle" font-size="9">5.80 × 4.80</text>
-      <text x="30" y="44" text-anchor="middle" font-size="8">27.8 m²</text>
-      <rect x="100" y="0" width="60" height="50" fill="#fff8e6"/>
-      <text x="130" y="20" text-anchor="middle" font-size="10" font-weight="bold">SALON B</text>
-      <text x="130" y="33" text-anchor="middle" font-size="9">5.80 × 4.80</text>
-      <text x="130" y="44" text-anchor="middle" font-size="8">27.8 m²</text>
-      <rect x="60" y="0" width="40" height="60" fill="#ffe6cc"/>
-      <text x="80" y="14" text-anchor="middle" font-size="10" font-weight="bold">PALIER</text>
-      <text x="80" y="26" text-anchor="middle" font-size="8">3.80×5.80</text>
-      <rect x="68" y="35" width="26" height="25" fill="none" stroke="#a66" stroke-width="1" stroke-dasharray="2,2"/>
-      <text x="81" y="50" text-anchor="middle" font-size="7" fill="#a66">TRÉMIE</text>
-      <text x="20" y="62" text-anchor="middle" font-size="9" font-weight="bold">CUISINE A</text>
-      <text x="60" y="62" text-anchor="middle" font-size="9" font-weight="bold">CH.2 A</text>
-      <text x="140" y="62" text-anchor="middle" font-size="9" font-weight="bold">CUISINE B</text>
-      <text x="100" y="62" text-anchor="middle" font-size="9" font-weight="bold">CH.2 B</text>
-      <text x="40" y="100" text-anchor="middle" font-size="9" font-weight="bold">CH.1 A</text>
-      <text x="120" y="100" text-anchor="middle" font-size="9" font-weight="bold">CH.1 B</text>
-      <rect x="0" y="85" width="20" height="40" fill="#e6f7ff"/>
-      <rect x="140" y="85" width="20" height="40" fill="#e6f7ff"/>
-      <rect x="60" y="85" width="40" height="40" fill="#fff8e0" stroke="#c9a227" stroke-width="1" stroke-dasharray="3,2"/>
-      <text x="80" y="105" text-anchor="middle" font-size="10" fill="#8a6d00">VIDE</text>
-      <text x="80" y="117" text-anchor="middle" font-size="8" fill="#8a6d00">PATIO</text>
-      <rect x="0" y="125" width="30" height="35" fill="#e6f7ff"/>
-      <text x="15" y="145" text-anchor="middle" font-size="8" transform="rotate(-90 15 145)">SDB A</text>
-      <text x="55" y="140" text-anchor="middle" font-size="9" font-weight="bold">DÉGAG. A</text>
-      <text x="105" y="140" text-anchor="middle" font-size="9" font-weight="bold">DÉGAG. B</text>
-      <rect x="130" y="125" width="30" height="35" fill="#e6f7ff"/>
-      <text x="145" y="145" text-anchor="middle" font-size="8" transform="rotate(-90 145 145)">SDB B</text>
-      <rect x="0" y="-15" width="60" height="15" fill="#d9ead3" stroke="#666" stroke-width="1"/>
-      <text x="30" y="-5" text-anchor="middle" font-size="9" font-weight="bold">BALCON A</text>
-      <rect x="100" y="-15" width="60" height="15" fill="#d9ead3" stroke="#666" stroke-width="1"/>
-      <text x="130" y="-5" text-anchor="middle" font-size="9" font-weight="bold">BALCON B</text>
-      <path d="M60,25 A10,10 0 0,1 70,35" fill="none" stroke="#0055cc" stroke-width="1"/>
-      <path d="M100,25 A10,10 0 0,0 90,35" fill="none" stroke="#0055cc" stroke-width="1"/>
-      <line x1="5" y1="0" x2="25" y2="0" stroke="#0055cc" stroke-width="3"/>
-      <line x1="35" y1="0" x2="55" y2="0" stroke="#0055cc" stroke-width="3"/>
-      <line x1="105" y1="0" x2="125" y2="0" stroke="#0055cc" stroke-width="3"/>
-      <line x1="135" y1="0" x2="155" y2="0" stroke="#0055cc" stroke-width="3"/>
-      <g fill="#000">
-        <rect x="-2" y="-2" width="4" height="4"/><rect x="58" y="-2" width="4" height="4"/>
-        <rect x="98" y="-2" width="4" height="4"/><rect x="158" y="-2" width="4" height="4"/>
-        <rect x="-2" y="48" width="4" height="4"/><rect x="58" y="48" width="4" height="4"/>
-        <rect x="98" y="48" width="4" height="4"/><rect x="158" y="48" width="4" height="4"/>
-        <rect x="-2" y="103" width="4" height="4"/><rect x="58" y="103" width="4" height="4"/>
-        <rect x="98" y="103" width="4" height="4"/><rect x="158" y="103" width="4" height="4"/>
-        <rect x="-2" y="158" width="4" height="4"/><rect x="58" y="158" width="4" height="4"/>
-        <rect x="98" y="158" width="4" height="4"/><rect x="158" y="158" width="4" height="4"/>
-      </g>
-    </g>
-    <text x="100" y="-50" text-anchor="middle" font-size="13" font-weight="bold" fill="#a00">↑ RUE PRINCIPALE (NORD)</text>
-    <text x="220" y="120" text-anchor="middle" font-size="13" font-weight="bold" fill="#a00" transform="rotate(90 220 120)">RUE (EST) →</text>
-    <g transform="translate(180,10)">
-      <circle r="12" fill="#fff" stroke="#333" stroke-width="1"/>
-      <path d="M0,-10 L3,-2 L0,0 L-3,-2 Z" fill="#a00"/>
-      <text y="-14" text-anchor="middle" font-size="10" font-weight="bold">N</text>
-    </g>
-  </svg>
+/* ===== 3D ===== */
+let ren,sc,cam,G={},az=2.3,el=.5,dist=38,ok=0,sh={e:1,r:1};const MC={};
+const mt=(c,o)=>MC[c+o]||(MC[c+o]=new THREE.MeshLambertMaterial({color:c,transparent:!!o,opacity:o||1}));
+function bx(x1,y1,x2,y2,z1,z2,c,g,o){if(x2-x1<.002||y2-y1<.002||z2-z1<.002)return;const m=new THREE.Mesh(new THREE.BoxGeometry(x2-x1,z2-z1,y2-y1),mt(c,o));m.position.set((x1+x2)/2-8,(z1+z2)/2,-((y1+y2)/2-8));G[g].add(m)}
+const SH={d:[0,2.1],w:[.9,2.1],g:[0,2.4],o:[0,2.4]},HT={bed:.5,sof:.8,tab:.75,cof:.4,tv:.5,war:2,kit:.9,hob:.92,sink:.92,frg:1.8,dou:.06,wc:.4,lav:.8,nt:.5,cnt:.9,etag:1.8,mach:.85,bain:.55,bur:.75,pot:.5},FC={bed:'#c9b8a5',sof:'#6b7f99',tab:'#a67c52',cof:'#8a6a4a',tv:'#222',war:'#b89b72',kit:'#d8d8d8',hob:'#333',sink:'#bbb',frg:'#eee',dou:'#cfe6f2',wc:'#fff',lav:'#fff',nt:'#a67c52',cnt:'#c9a46c',etag:'#b8956a',mach:'#eee',bain:'#fff',bur:'#a67c52',pot:'#4a7c4e'};
+function wall3(w,os,z0,h,g){let[o,c,a,b,t]=w;const col=t>=.2?'#ece6da':'#f5f2ec';if(o=='h'&&(c==0||c==16)&&t==.2){a-=.1;b+=.1}
+const ms=os.filter(p=>p[0]==o&&p[1]==c&&p[2]>=a-.001&&p[2]+p[3]<=b+.001).sort((u,v)=>u[2]-v[2]);
+const sg=(s,e,zb,zt,cl,op)=>o=='h'?bx(s,c-t/2,e,c+t/2,z0+zb,z0+zt,cl,g,op):bx(c-t/2,s,c+t/2,e,z0+zb,z0+zt,cl,g,op);
+let cu=a;for(const p of ms){sg(cu,p[2],0,h,col);const[sl,hd]=SH[p[4]],e=p[2]+p[3];sg(p[2],e,0,sl,col);sg(p[2],e,hd,h,col);if(p[4]=='w'||p[4]=='g')sg(p[2],e,sl,hd,'#9cc4dc',.35);cu=e}sg(cu,b,0,h,col)}
+function cu3(){const r=dist;cam.position.set(r*Math.cos(el)*Math.sin(az),2.5+r*Math.sin(el),r*Math.cos(el)*Math.cos(az));cam.lookAt(0,2.5,0);G.e.visible=!!sh.e;G.r.visible=!!(sh.e&&sh.r);ren.render(sc,cam)}
+function rs3(){const e=document.getElementById('c3');ren.setSize(e.clientWidth,e.clientHeight);cam.aspect=e.clientWidth/e.clientHeight;cam.updateProjectionMatrix();cu3()}
+function mk3(){const box=document.getElementById('c3'),cv=document.createElement('canvas');box.prepend(cv);
+ren=new THREE.WebGLRenderer({canvas:cv,antialias:true});ren.setPixelRatio(Math.min(devicePixelRatio,2));sc=new THREE.Scene();sc.background=new THREE.Color(0xdfe6ec);cam=new THREE.PerspectiveCamera(40,1,.1,300);
+sc.add(new THREE.HemisphereLight(0xffffff,0x9aa4ad,.85));const dl=new THREE.DirectionalLight(0xffffff,.7);dl.position.set(-20,40,25);sc.add(dl);
+['b','e','r'].forEach(k=>{G[k]=new THREE.Group();sc.add(G[k])});
+bx(-4,-4,30,28,-.4,-.06,'#dfe3d8','b');bx(-4,20,30,28,-.4,-.04,'#59636d','b');bx(20,-4,28,20,-.4,-.04,'#59636d','b');bx(0,0,20,20,-.1,-.05,'#d9dcd0','b');
+bx(-12,-12,24,0,0,7,'#c6ccd2','b',.5);bx(-12,0,0,20,0,7,'#c6ccd2','b',.5);
+bx(0,0,16,16,-.1,0,'#d4cec2','b');bx(6,0,10,4,-.1,.02,'#a9c1a0','b');
+A0.w.forEach(w=>wall3(w,A0.o,0,3,'b'));A0.f.forEach(f=>bx(f[1],f[2],f[1]+f[3],f[2]+f[4],0,HT[f[0]]||.5,FC[f[0]]||'#aaa','b'));
+for(let i=0;i<9;i++){bx(7.4,14.7-(i+1)*.28,8.5,14.7-i*.28,0,(i+1)*.178,'#c9c2b6','b');bx(6.2,12.46+i*.28,7.3,12.46+(i+1)*.28,0,1.6+(i+1)*.178,'#c9c2b6','b')}
+bx(6.2,11.2,8.5,12.46,0,1.6,'#c9c2b6','b');
+[[0,0,6,4],[10,0,16,4],[0,4,16,11],[0,11,6,16],[10,11,16,16],[8.5,11,10,16],[6,14.7,8.5,16],[6,11,6.2,14.7],[6.2,11,8.5,11.2]].forEach(a=>bx(a[0],a[1],a[2],a[3],3,3.2,'#d9d3c7','e'));
+E.w.forEach(w=>wall3(w,E.o,3.2,2.8,'e'));E.f.forEach(f=>bx(f[1],f[2],f[1]+f[3],f[2]+f[4],3.2,3.2+(HT[f[0]]||.5),FC[f[0]]||'#aaa','e'));
+[[0,6],[10,16]].forEach(a=>{bx(a[0],16,a[1],17.5,3.05,3.2,'#d6d0c3','e');bx(a[0],17.4,a[1],17.5,3.2,4.2,'#9fb4c8','e',.45);bx(a[0],16,a[0]+.1,17.5,3.2,4.2,'#9fb4c8','e',.45);bx(a[1]-.1,16,a[1],17.5,3.2,4.2,'#9fb4c8','e',.45)});
+for(let x=6.2;x<9.8;x+=.2){bx(x,16.1,x+.06,16.25,3.3,5.9,'#a9794a','e');if(x<8.7)bx(x,16.1,x+.06,16.25,.6,3,'#a9794a','b')}[[.5,5.7],[10.3,15.5]].forEach(a=>bx(a[0],16.1,a[1],16.2,2.55,3,'#2d3a4a','b'));bx(0,16.1,16,16.2,3,3.45,'#cdc8bc','b');
+[[0,0,6,4],[10,0,16,4],[0,4,16,16]].forEach(a=>bx(a[0],a[1],a[2],a[3],6,6.2,'#d9d3c7','r'));
+[[0,0,16,.2],[0,15.8,16,16],[0,.2,.2,15.8],[15.8,.2,16,15.8]].forEach(a=>bx(a[0],a[1],a[2],a[3],6.2,7,'#e7e1d5','r'));
+const tb=box.querySelector('.tb'),b=(t,f)=>{const e=document.createElement('button');e.textContent=t;e.onclick=()=>{f(e);cu3()};tb.appendChild(e)};
+b('Toit',e=>{sh.r=!sh.r;e.classList.toggle('on',!sh.r)});b('Étage',e=>{sh.e=!sh.e;e.classList.toggle('on',!sh.e)});
+b('Vue rue',()=>{az=2.3;el=.5;dist=38});b('Façade',()=>{az=Math.PI;el=.12;dist=40});b('Dessus',()=>{az=Math.PI;el=1.5;dist=34});b('Zoom +',()=>{dist=Math.max(12,dist*.85)});b('Zoom −',()=>{dist=Math.min(80,dist/.85)});
+const pt=new Map();cv.addEventListener('pointerdown',e=>{pt.set(e.pointerId,e);cv.setPointerCapture(e.pointerId)});
+cv.addEventListener('pointermove',e=>{const o=pt.get(e.pointerId);if(!o)return;if(pt.size==1){az-=(e.clientX-o.clientX)*.008;el=Math.max(.08,Math.min(1.5,el+(e.clientY-o.clientY)*.008))}else if(pt.size==2){const w=[...pt.values()].find(p=>p.pointerId!=e.pointerId),d0=Math.hypot(o.clientX-w.clientX,o.clientY-w.clientY),d1=Math.hypot(e.clientX-w.clientX,e.clientY-w.clientY);dist=Math.max(12,Math.min(80,dist*d0/d1))}pt.set(e.pointerId,e);cu3()});
+['pointerup','pointercancel'].forEach(n=>cv.addEventListener(n,e=>pt.delete(e.pointerId)));
+cv.addEventListener('wheel',e=>{e.preventDefault();dist=Math.max(12,Math.min(80,dist*(1+e.deltaY*.001)));cu3()},{passive:false});
+addEventListener('resize',()=>ok&&rs3())}
 
-  <div class="cartouche">
-    <b>Projet :</b> Maison R+1 d'angle 20×20 m — Mme Wone &nbsp;|&nbsp;
-    <b>Architecte :</b> C.A.B. Yade &nbsp;|&nbsp; <b>Indice A</b> — 19/11/2026 &nbsp;|&nbsp;
-    <b>Plan étage :</b> Appartement A 99.0 m² / B 99.0 m² / Palier 22.0 m² / Balcons 18.0 m²
-  </div>
-</div>
-
-<!-- ============ PAGE 3 : FAÇADE NORD ============ -->
-<div class="page">
-  <h2>3. FAÇADE PRINCIPALE NORD (RUE) — R+1</h2>
-  <div class="sub">RDC : magasins + escalier — Étage : balcons + fenêtres — Hauteur totale +7.00 m</div>
-
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="-80 -80 2100 1000" font-family="Arial" font-size="14">
-    <rect x="-80" y="-80" width="2100" height="1000" fill="#fafafa"/>
-    <g transform="translate(20,20)">
-      <line x1="-50" y1="700" x2="1700" y2="700" stroke="#333" stroke-width="3"/>
-      <text x="-60" y="710" font-size="11" text-anchor="end">±0.00</text>
-      <rect x="0" y="380" width="1600" height="320" fill="#f5ede0" stroke="#000" stroke-width="2"/>
-      <rect x="0" y="80" width="1600" height="300" fill="#fdf6ec" stroke="#000" stroke-width="2"/>
-      <rect x="0" y="0" width="1600" height="80" fill="#e8e0d0" stroke="#000" stroke-width="2"/>
-      <g stroke="#a00" stroke-width="0.8" stroke-dasharray="4,2">
-        <line x1="-30" y1="380" x2="0" y2="380"/><line x1="-30" y1="80" x2="0" y2="80"/>
-        <line x1="-30" y1="0" x2="0" y2="0"/>
-      </g>
-      <g font-size="11" fill="#a00" text-anchor="end">
-        <text x="-35" y="385">+3.20</text><text x="-35" y="85">+6.20</text><text x="-35" y="5">+7.00</text>
-      </g>
-      <rect x="50" y="430" width="400" height="240" fill="#cfe2f3" stroke="#0055cc" stroke-width="2"/>
-      <text x="250" y="560" text-anchor="middle" font-size="16" font-weight="bold" fill="#003366">VITRINE MAG. 1</text>
-      <text x="250" y="580" text-anchor="middle" font-size="11" fill="#003366">4.00 × 2.40</text>
-      <rect x="460" y="430" width="100" height="240" fill="#fff" stroke="#0055cc" stroke-width="2"/>
-      <text x="510" y="560" text-anchor="middle" font-size="11" fill="#003366">PORTE</text>
-      <rect x="600" y="430" width="400" height="240" fill="#fce5cd" stroke="#000" stroke-width="2"/>
-      <text x="800" y="540" text-anchor="middle" font-size="14" font-weight="bold">ESCALIER</text>
-      <text x="800" y="560" text-anchor="middle" font-size="12">INDÉPENDANT</text>
-      <rect x="720" y="430" width="160" height="240" fill="#fff" stroke="#a66" stroke-width="2"/>
-      <text x="800" y="560" text-anchor="middle" font-size="11">PORTE 1.00</text>
-      <rect x="1000" y="430" width="100" height="240" fill="#fff" stroke="#0055cc" stroke-width="2"/>
-      <text x="1050" y="560" text-anchor="middle" font-size="11" fill="#003366">PORTE</text>
-      <rect x="1100" y="430" width="450" height="240" fill="#cfe2f3" stroke="#0055cc" stroke-width="2"/>
-      <text x="1325" y="560" text-anchor="middle" font-size="16" font-weight="bold" fill="#003366">VITRINE MAG. 2</text>
-      <text x="1325" y="580" text-anchor="middle" font-size="11" fill="#003366">4.00 × 2.40</text>
-      <rect x="0" y="390" width="1600" height="40" fill="#c9b58a" opacity="0.7"/>
-      <text x="800" y="415" text-anchor="middle" font-size="10" fill="#5a4a2a">BRISE-SOLEIL BÉTON 0.40 m</text>
-      <rect x="50" y="180" width="500" height="120" fill="#d9ead3" stroke="#666" stroke-width="2"/>
-      <text x="300" y="240" text-anchor="middle" font-size="14" font-weight="bold">BALCON A</text>
-      <text x="300" y="260" text-anchor="middle" font-size="10">6.00 × 1.50</text>
-      <rect x="50" y="180" width="500" height="20" fill="none" stroke="#666" stroke-width="1.5"/>
-      <rect x="120" y="120" width="200" height="200" fill="#bcd9f0" stroke="#0055cc" stroke-width="2"/>
-      <text x="220" y="225" text-anchor="middle" font-size="11" fill="#003366">P.F. 2.40×2.20</text>
-      <rect x="380" y="120" width="200" height="200" fill="#bcd9f0" stroke="#0055cc" stroke-width="2"/>
-      <text x="480" y="225" text-anchor="middle" font-size="11" fill="#003366">P.F. 2.40×2.20</text>
-      <rect x="700" y="160" width="200" height="120" fill="#bcd9f0" stroke="#0055cc" stroke-width="2"/>
-      <text x="800" y="225" text-anchor="middle" font-size="11" fill="#003366">FEN. 1.20×1.30</text>
-      <rect x="1050" y="180" width="500" height="120" fill="#d9ead3" stroke="#666" stroke-width="2"/>
-      <text x="1300" y="240" text-anchor="middle" font-size="14" font-weight="bold">BALCON B</text>
-      <text x="1300" y="260" text-anchor="middle" font-size="10">6.00 × 1.50</text>
-      <rect x="1050" y="180" width="500" height="20" fill="none" stroke="#666" stroke-width="1.5"/>
-      <rect x="1120" y="120" width="200" height="200" fill="#bcd9f0" stroke="#0055cc" stroke-width="2"/>
-      <text x="1220" y="225" text-anchor="middle" font-size="11" fill="#003366">P.F. 2.40×2.20</text>
-      <rect x="1380" y="120" width="200" height="200" fill="#bcd9f0" stroke="#0055cc" stroke-width="2"/>
-      <text x="1480" y="225" text-anchor="middle" font-size="11" fill="#003366">P.F. 2.40×2.20</text>
-      <g stroke="#333" stroke-width="0.8" fill="#333" font-size="11">
-        <line x1="1650" y1="380" x2="1650" y2="700"/>
-        <line x1="1640" y1="380" x2="1660" y2="380"/>
-        <line x1="1640" y1="700" x2="1660" y2="700"/>
-        <text x="1680" y="545" font-size="12" font-weight="bold">RDC 3.20 m</text>
-        <line x1="1650" y1="80" x2="1650" y2="380"/>
-        <line x1="1640" y1="80" x2="1660" y2="80"/>
-        <text x="1680" y="235" font-size="12" font-weight="bold">ÉTAGE 3.00 m</text>
-        <line x1="1650" y1="0" x2="1650" y2="80"/>
-        <text x="1680" y="45" font-size="11">ACROTÈRE 0.80</text>
-        <line x1="0" y1="740" x2="1600" y2="740"/>
-        <line x1="0" y1="730" x2="0" y2="750"/>
-        <line x1="1600" y1="730" x2="1600" y2="750"/>
-        <text x="800" y="770" text-anchor="middle" font-weight="bold">FAÇADE NORD — 16.00 m</text>
-      </g>
-    </g>
-  </svg>
-
-  <div class="cartouche">
-    <b>Projet :</b> Maison R+1 d'angle 20×20 m — Mme Wone &nbsp;|&nbsp;
-    <b>Architecte :</b> C.A.B. Yade &nbsp;|&nbsp; <b>Indice A</b> — 19/11/2026 &nbsp;|&nbsp;
-    <b>Façade :</b> RDC vitrines 4.00×2.40 + escalier / Étage balcons 6.00×1.50 + P.F. 2.40×2.20 / Acrotère 0.80
-  </div>
-</div>
-
-<!-- ============ PAGE 4 : COUPE AA ============ -->
-<div class="page">
-  <h2>4. COUPE AA — AXE x = 8,00 (NORD → SUD)</h2>
-  <div class="sub">Escalier 18 marches — dalles 20 cm — fondations -1.50 m — acrotère 0.80</div>
-
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="-80 -80 2100 1400" font-family="Arial" font-size="14">
-    <rect x="-80" y="-80" width="2100" height="1400" fill="#fafafa"/>
-    <g transform="translate(40,20)">
-      <line x1="-100" y1="850" x2="1900" y2="850" stroke="#666" stroke-width="2"/>
-      <text x="-110" y="855" font-size="11" text-anchor="end">TN -0.60</text>
-      <rect x="50" y="940" width="140" height="45" fill="#bbb" stroke="#333" stroke-width="1.5"/>
-      <text x="120" y="968" text-anchor="middle" font-size="10">SEMELLE 1.40×0.45</text>
-      <rect x="1150" y="940" width="140" height="45" fill="#bbb" stroke="#333" stroke-width="1.5"/>
-      <text x="1220" y="968" text-anchor="middle" font-size="10">SEMELLE 1.40×0.45</text>
-      <rect x="50" y="880" width="140" height="40" fill="#ccc" stroke="#333" stroke-width="1.5"/>
-      <rect x="1150" y="880" width="140" height="40" fill="#ccc" stroke="#333" stroke-width="1.5"/>
-      <rect x="100" y="700" width="40" height="180" fill="#888" stroke="#333" stroke-width="1.5"/>
-      <rect x="1200" y="700" width="40" height="180" fill="#888" stroke="#333" stroke-width="1.5"/>
-      <rect x="150" y="820" width="1000" height="15" fill="#d0d0d0" stroke="#333" stroke-width="1"/>
-      <rect x="150" y="510" width="1000" height="20" fill="#a0a0a0" stroke="#333" stroke-width="1.5"/>
-      <rect x="150" y="210" width="1000" height="20" fill="#a0a0a0" stroke="#333" stroke-width="1.5"/>
-      <rect x="150" y="70" width="30" height="140" fill="#e8e0d0" stroke="#000" stroke-width="2"/>
-      <rect x="1120" y="70" width="30" height="140" fill="#e8e0d0" stroke="#000" stroke-width="2"/>
-      <text x="165" y="65" text-anchor="middle" font-size="11">ACROTÈRE 0.80</text>
-      <line x1="150" y1="210" x2="1150" y2="210" stroke="#a00" stroke-width="2"/>
-      <g stroke="#a00" stroke-width="0.8" stroke-dasharray="4,2">
-        <line x1="-50" y1="850" x2="50" y2="850"/><line x1="-50" y1="530" x2="50" y2="530"/>
-        <line x1="-50" y1="230" x2="50" y2="230"/><line x1="-50" y1="70" x2="50" y2="70"/>
-      </g>
-      <g font-size="11" fill="#a00" text-anchor="end">
-        <text x="-55" y="855">±0.00</text><text x="-55" y="535">+3.20</text>
-        <text x="-55" y="235">+6.20</text><text x="-55" y="75">+7.00</text>
-      </g>
-      <text x="650" y="480" text-anchor="middle" font-size="14" font-weight="bold">HALL / ESCALIER</text>
-      <g stroke="#333" stroke-width="2" fill="none">
-        <path d="M450,820 L450,780 L466,780 L466,745 L483,745 L483,710 L500,710 L500,690 L516,690 L516,660 L533,660 L533,630 L550,630 L550,600 L566,600 L566,570 L583,570 L583,540 L600,540 L600,510"/>
-        <line x1="600" y1="510" x2="700" y2="510"/>
-        <path d="M700,510 L700,480 L716,480 L716,450 L733,450 L733,420 L750,420 L750,390 L766,390 L766,360 L783,360 L783,330 L800,330 L800,300 L816,300 L816,270 L833,270 L833,240 L850,240 L850,230"/>
-      </g>
-      <text x="650" y="500" font-size="10" text-anchor="middle">PALIER +1.60</text>
-      <line x1="600" y1="510" x2="600" y2="530" stroke="#a00" stroke-width="1" stroke-dasharray="2,2"/>
-      <line x1="850" y1="510" x2="850" y2="530" stroke="#a00" stroke-width="1" stroke-dasharray="2,2"/>
-      <text x="725" y="555" text-anchor="middle" font-size="10" fill="#a00">TRÉMIE 2.60×2.50</text>
-      <text x="900" y="470" text-anchor="middle" font-size="13" font-weight="bold">S. À MANGER</text>
-      <text x="900" y="380" text-anchor="middle" font-size="12" font-weight="bold" fill="#8a6d00">PATIO (VIDE)</text>
-      <line x1="900" y1="510" x2="900" y2="230" stroke="#c9a227" stroke-width="1" stroke-dasharray="4,3"/>
-      <rect x="880" y="210" width="40" height="20" fill="#d9ead3" stroke="#666" stroke-width="1"/>
-      <text x="900" y="200" text-anchor="middle" font-size="9">GARDE-CORPS 1.00</text>
-      <text x="1000" y="470" text-anchor="middle" font-size="12" font-weight="bold">SDB / DÉGAG.</text>
-      <text x="1000" y="380" text-anchor="middle" font-size="12">COULOIR SUD</text>
-      <rect x="100" y="210" width="40" height="300" fill="#888" stroke="#333" stroke-width="1.5"/>
-      <rect x="1200" y="210" width="40" height="300" fill="#888" stroke="#333" stroke-width="1.5"/>
-      <text x="400" y="525" font-size="10" fill="#333">DALLE 20</text>
-      <text x="400" y="225" font-size="10" fill="#333">DALLE 20</text>
-      <text x="400" y="965" font-size="11">SEMELLES ISOLÉES 1.40×1.40×0.45 à -1.50</text>
-      <text x="400" y="900" font-size="11">LONGRINES 25×40 — SOUBASSEMENT ±0.00</text>
-      <g stroke="#333" stroke-width="0.8" fill="#333" font-size="12">
-        <line x1="1350" y1="530" x2="1350" y2="230"/>
-        <line x1="1340" y1="530" x2="1360" y2="530"/>
-        <line x1="1340" y1="230" x2="1360" y2="230"/>
-        <text x="1380" y="385" font-weight="bold">HSP RDC 3.00</text>
-        <line x1="1500" y1="230" x2="1500" y2="70"/>
-        <line x1="1490" y1="230" x2="1510" y2="230"/>
-        <line x1="1490" y1="70" x2="1510" y2="70"/>
-        <text x="1530" y="155" font-weight="bold">HSP ÉTAGE 2.80</text>
-      </g>
-      <text x="-30" y="-5" font-size="16" font-weight="bold" fill="#a00">A</text>
-      <text x="1850" y="-5" font-size="16" font-weight="bold" fill="#a00">A</text>
-      <line x1="-50" y1="-10" x2="1880" y2="-10" stroke="#a00" stroke-width="2" stroke-dasharray="8,4"/>
-      <text x="100" y="-40" font-size="14" font-weight="bold" fill="#a00">N (rue)</text>
-      <text x="1100" y="-40" font-size="14" font-weight="bold" fill="#666" text-anchor="end">S (mitoyen)</text>
-    </g>
-  </svg>
-
-  <div class="cartouche">
-    <b>Projet :</b> Maison R+1 d'angle 20×20 m — Mme Wone &nbsp;|&nbsp;
-    <b>Architecte :</b> C.A.B. Yade &nbsp;|&nbsp; <b>Indice A</b> — 19/11/2026 &nbsp;|&nbsp;
-    <b>Coupe AA :</b> Escalier 18 marches (17.8/28) — dalles 20 cm — semelles -1.50 — acrotère 0.80 &nbsp;|&nbsp;
-    <i>Sous réserve étude de sol et note de calcul BA</i>
-  </div>
-</div>
-
-</body>
-</html>
+/* ===== PDF ===== */
+const NM=['plan-rdc','plan-etage','facade-principale','coupe-AA','vue-3d'];
+function svgImg(svg){return new Promise((res,rej)=>{const v=svg.match(/viewBox="([^"]+)"/)[1].split(/\s+/).map(Number),w=v[2],h=v[3];svg=svg.replace('<svg ',`<svg width="${w}" height="${h}" `);
+const u=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml;charset=utf-8'})),im=new Image();
+im.onload=()=>{const c=document.createElement('canvas');c.width=w*2;c.height=h*2;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);res({d:c.toDataURL('image/jpeg',.92),w:w*.2,h:h*.2})};im.onerror=rej;im.src=u})}
+function snap3(){const k=cur;show(4);cu3();const c=ren.domElement,r={d:c.toDataURL('image/jpeg',.92),w:277,h:277*c.height/c.width};show(k);return r}
+async function pdf(keys,name){const J=window.jspdf.jsPDF,doc=new J({orientation:'p',unit:'mm',format:'a3'});
+for(let n=0;n<keys.length;n++){const k=keys[n];if(n)doc.addPage('a3','p');const im=k==4?snap3():await svgImg(TABS[k][1]());
+const w=Math.min(im.w,277),h=im.h*w/im.w;doc.addImage(im.d,'JPEG',(297-w)/2,10,w,h);
+doc.setLineWidth(.3);doc.rect(10,382,277,28);doc.setFontSize(10);doc.setFont('helvetica','bold');doc.text(TABS[k][0].toUpperCase(),14,389);doc.setFont('helvetica','normal');
+doc.text("Projet : maison R+1 d'angle, 2 magasins, logement RDC, 2 appartements",14,395);doc.text('Architecte : Cheikh Ahmadou Bamba Yade',14,401);doc.text("Maître d'ouvrage : Mme Wone",150,401);
+doc.text(k==4?'Vue 3D':'Échelle 1/100 · format A3',14,407);doc.text('Avant-projet · indice A · 19/11/2026',150,407)}
+doc.save(name+'.pdf')}
+/* ===== ONGLETS ===== */
+const TABS=[['Plan RDC',()=>plan(A0,0)],['Plan étage',()=>plan(E,1)],['Façade',facade],['Coupe AA',coupe],['Vue 3D',0]];
+const nv=document.getElementById('nv'),d2=document.getElementById('d2'),c3=document.getElementById('c3');
+let cur=0;function show(i){cur=i;[...nv.children].forEach((b,j)=>b.classList.toggle('on',i==j));
+if(TABS[i][1]){c3.style.display='none';d2.style.display='block';d2.innerHTML=TABS[i][1]()}else{d2.style.display='none';c3.style.display='block';if(!ok){mk3();ok=1}rs3()}}
+TABS.forEach((t,i)=>{const b=document.createElement('button');b.textContent=t[0];b.onclick=()=>show(i);nv.appendChild(b)});show(0);
+[['Télécharger cette vue en PDF',()=>pdf([cur],NM[cur])],['Dossier complet en PDF (5 pages)',()=>pdf([0,1,2,3,4],'dossier-complet-maison-wone')]].forEach(a=>{const b=document.createElement('button');b.textContent=a[0];b.onclick=async()=>{b.disabled=true;try{await a[1]()}catch(e){alert('Export impossible : '+e.message)}b.disabled=false};document.getElementById('dl').appendChild(b)});
+</script></body></html>
